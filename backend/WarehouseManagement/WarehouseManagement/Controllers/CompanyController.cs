@@ -1,73 +1,36 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Service.Abstract;
 using WarehouseManagement.Dtos.Company;
+using IResult = WarehouseManagement.Core.Utilities.Results.IResult;
 
-namespace WarehouseManagement.WebAPI.Controllers
+namespace WarehouseManagement.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class CompaniesController : ControllerBase
+    [Route("api/[controller]")]
+    // Primary Constructor kullanarak servisi içeri alıyoruz
+    public class CompaniesController(ICompanyService companyService) : ControllerBase
     {
-        private readonly ICompanyService _companyService;
-
-        public CompaniesController(ICompanyService companyService)
-        {
-            _companyService = companyService;
-        }
-
-        [HttpGet("getall-paged")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> GetPagedList(int page = 1, int pageSize = 10, string? searchTerm = null)
-        {
-            var result = await _companyService.GetPagedListAsync(page, pageSize, searchTerm);
+            => ProcessResult(await companyService.GetPagedListAsync(page, pageSize, searchTerm));
 
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
-        }
-
-        [HttpGet("getbyid/{id}")]
+        [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(Guid id)
-        {
-            var result = await _companyService.GetByIdAsync(id);
-
-            if (result.Success)
-                return Ok(result);
-
-            return NotFound(result);
-        }
+            => ProcessResult(await companyService.GetByIdAsync(id));
 
         [HttpPost("create")]
         public async Task<IActionResult> Add([FromBody] CompanyCreateDto dto)
-        {
-            var result = await _companyService.AddAsync(dto);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
-        }
+            => ProcessResult(await companyService.AddAsync(dto));
 
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] CompanyUpdateDto dto)
-        {
-            var result = await _companyService.UpdateAsync(dto);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
-        }
+            => ProcessResult(await companyService.UpdateAsync(dto));
 
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] DeleteDto dto)
-        {
-            var result = await _companyService.DeleteAsync(dto.Id);
+            => ProcessResult(await companyService.DeleteAsync(dto.Id));
 
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
-        }
+        private IActionResult ProcessResult(IResult result)
+            => result.Success ? Ok(result) : BadRequest(result);
     }
 }
