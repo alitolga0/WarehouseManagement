@@ -53,36 +53,29 @@ export default function WarehousesPage() {
     fetchCompanies();
   }, []);
 
-  // Depoları Yükle (Sayfalama Parametresiyle)
+  // Depoları Yükle
   const fetchWarehouses = async (p: number = 1) => {
     if (!selectedCompanyId) return;
     setLoading(true);
     try {
-      // Sayfa başına 10 kayıt (isteğe göre değiştirilebilir)
       const res = await WarehousesService.getAll(selectedCompanyId, p, 10);
       const data = res.data?.data || res.data;
 
       setWarehouses(data?.items || []);
       setTotalPages(data?.totalPages || 1);
-      setPage(data?.page || p); // Servisten dönen sayfa numarasını veya isteği setle
+      setPage(p); 
     } catch (err) {
       console.error("Depolar yüklenirken hata:", err);
       setWarehouses([]);
     } finally { setLoading(false); }
   };
 
-  // Firma değiştiğinde ilk sayfaya dönerek depoları çek
+  // Firma değiştiğinde ilk sayfaya dön
   useEffect(() => {
     if (selectedCompanyId) {
-      setPage(1);
       fetchWarehouses(1);
     }
   }, [selectedCompanyId]);
-
-  // Sayfa Değiştirme Olayı
-  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
-    fetchWarehouses(value);
-  };
 
   const handleOpenDialog = (w?: Warehouse) => {
     setEditWarehouse(w || null);
@@ -98,23 +91,23 @@ export default function WarehousesPage() {
       } else {
         await WarehousesService.create({ companyId: selectedCompanyId, name: warehouseName });
       }
-      fetchWarehouses(page); // Mevcut sayfayı yenile
+      fetchWarehouses(page);
       setOpenDialog(false);
     } catch (err) { console.error(err); }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Bu depoyu silmek istediğinize emin misiniz?")) {
-      await WarehousesService.delete(id, selectedCompanyId);
-      // Eğer silinen kayıt sayfadaki son kayıt ise bir önceki sayfaya git
-      const targetPage = warehouses.length === 1 && page > 1 ? page - 1 : page;
-      fetchWarehouses(targetPage);
+      try {
+        await WarehousesService.delete(id, selectedCompanyId);
+        const targetPage = warehouses.length === 1 && page > 1 ? page - 1 : page;
+        fetchWarehouses(targetPage);
+      } catch (err) { console.error(err); }
     }
   };
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f4f7fa', minHeight: '100vh' }}>
-      {/* Header Alanı */}
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={3} sx={{ mb: 4 }}>
         <Box>
           <Typography variant="h3" sx={{ fontWeight: 900, color: '#1a237e', display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -153,7 +146,6 @@ export default function WarehousesPage() {
         </Stack>
       </Stack>
 
-      {/* Tablo Kartı */}
       <Paper elevation={0} sx={{ borderRadius: 4, border: '1px solid #e0e6ed', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
         {loading && (
           <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.7)', zIndex: 2 }}>
@@ -229,21 +221,23 @@ export default function WarehousesPage() {
           </Table>
         </TableContainer>
 
-        {/* Sayfalama Alt Çubuğu */}
-        <Divider />
-        <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'center', bgcolor: '#f8fafc' }}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(_, v) => fetchWarehouses(v)}
-            color="primary"
-            variant="outlined"
-            shape="rounded"
-          />
-        </Box>
+        {totalPages > 1 && (
+          <>
+            <Divider />
+            <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'center', bgcolor: '#f8fafc' }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, v) => fetchWarehouses(v)}
+                color="primary"
+                variant="outlined"
+                shape="rounded"
+              />
+            </Box>
+          </>
+        )}
       </Paper>
 
-      {/* Ekle / Düzenle Dialog */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
