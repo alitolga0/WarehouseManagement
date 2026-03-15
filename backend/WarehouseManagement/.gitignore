@@ -1,0 +1,54 @@
+# ----------------------
+# Visual Studio
+# ----------------------
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ----------------------
+# Build outputs
+# ----------------------
+bin/
+obj/
+Debug/
+Release/
+
+# ----------------------
+# NuGet packages
+# ----------------------
+**/packages/*
+!**/packages/build/
+
+# ----------------------
+# .NET Core / .NET
+# ----------------------
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ----------------------
+# VS Code
+# ----------------------
+.vscode/
+
+# ----------------------
+# Temporary files
+# ----------------------
+*.log
+*.tmp
+*.bak
+*.swp
+~$*
+
+# ----------------------
+# Database files
+# ----------------------
+*.mdf
+*.ldf
+
+# ----------------------
+# User secrets
+# ----------------------
+secrets.json
