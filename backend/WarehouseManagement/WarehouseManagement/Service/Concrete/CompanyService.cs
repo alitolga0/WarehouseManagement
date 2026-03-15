@@ -3,6 +3,7 @@ using WarehouseManagement.Service.Abstract;
 using WarehouseManagement.Core.Utilities.Results;
 using WarehouseManagement.Core.Repository;
 using WarehouseManagement.Dtos.Company;
+using Microsoft.EntityFrameworkCore;
 using IResult = WarehouseManagement.Core.Utilities.Results.IResult;
 
 public class CompanyService : ICompanyService
@@ -20,13 +21,11 @@ public class CompanyService : ICompanyService
     {
         var company = new Company
         {
-            Id = Guid.NewGuid(),
-            Name = dto.Name,
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
+            // Id, CreatedAt ve IsDeleted artık BaseRepository.AddAsync içinde hallediliyor.
+            Name = dto.Name
         };
 
-        await _baseRepository.Add(company);
+        await _baseRepository.AddAsync(company);
         await _unitOfWork.SaveChangesAsync();
 
         return new SuccessResult("Company added successfully.");
@@ -34,15 +33,15 @@ public class CompanyService : ICompanyService
 
     public async Task<IResult> UpdateAsync(CompanyUpdateDto dto)
     {
-        var company = _baseRepository.Get(x => x.Id == dto.Id);
-
+        var company = await _baseRepository.GetAsync(x => x.Id == dto.Id);
         if (company == null)
             return new ErrorResult("Company not found.");
 
+        // Sadece değişen alanları set et
         company.Name = dto.Name;
-        company.UpdatedAt = DateTime.UtcNow;
 
-        await _baseRepository.Update(company);
+        // BaseRepository.UpdateAsync içinde zaten EntityState.Modified veya CurrentValues.SetValues yapıyorsun
+        await _baseRepository.UpdateAsync(company);
         await _unitOfWork.SaveChangesAsync();
 
         return new SuccessResult("Company updated successfully.");
@@ -50,52 +49,43 @@ public class CompanyService : ICompanyService
 
     public async Task<IDataResult<CompanyDto>> GetByIdAsync(Guid id)
     {
-        var company = _baseRepository.Get(x => x.Id == id && (x.IsDeleted == false || x.IsDeleted == null));
+        // BaseRepository'deki GetAllWithNavigation veya GetAsync kullanılabilir
+        var company = await _baseRepository.GetAsync(x => x.Id == id && (x.IsDeleted == false || x.IsDeleted == null));
 
         if (company == null)
             return new ErrorDataResult<CompanyDto>(null, "Company not found.");
 
-        var dto = new CompanyDto
-        {
-            Id = company.Id,
-            Name = company.Name,
-            CreatedAt = company.CreatedAt,
-            UpdatedAt = company.UpdatedAt
-        };
-
-        return new SuccessDataResult<CompanyDto>(dto);
+        return new SuccessDataResult<CompanyDto>(MapToDto(company));
     }
 
     public async Task<IResult> DeleteAsync(Guid id)
     {
-        var company = _baseRepository.Get(x => x.Id == id);
-
-        if (company == null)
+        // BaseRepository içinde zaten Soft Delete mantığı yüklü (DeleteAsync metodun)
+        try
+        {
+            await _baseRepository.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
+            return new SuccessResult("Company deleted successfully.");
+        }
+        catch (Exception)
+        {
             return new ErrorResult("Company not found.");
-
-        company.IsDeleted = true;
-        company.DeletedAt = DateTime.UtcNow;
-
-        await _baseRepository.Update(company);
-        await _unitOfWork.SaveChangesAsync();
-
-        return new SuccessResult("Company deleted successfully.");
+        }
     }
 
     public async Task<IDataResult<PagedResultDto<CompanyDto>>> GetPagedListAsync(int page, int pageSize, string? searchTerm = null)
     {
-        var query = _baseRepository
-            .GetAll()
-            .Where(x => x.IsDeleted == false || x.IsDeleted == null);
+        var query = _baseRepository.GetAll(x => x.IsDeleted == false || x.IsDeleted == null);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             query = query.Where(x => x.Name.Contains(searchTerm));
         }
 
-        var totalCount = query.Count();
+        var totalCount = await query.CountAsync();
 
-        var items = query
+        var items = await query
+            .OrderBy(x => x.Name)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new CompanyDto
@@ -105,7 +95,7 @@ public class CompanyService : ICompanyService
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
             })
-            .ToList();
+            .ToListAsync();
 
         var result = new PagedResultDto<CompanyDto>
         {
@@ -116,5 +106,17 @@ public class CompanyService : ICompanyService
         };
 
         return new SuccessDataResult<PagedResultDto<CompanyDto>>(result);
+    }
+
+    // Kod tekrarını önlemek için küçük bir mapper
+    private CompanyDto MapToDto(Company company)
+    {
+        return new CompanyDto
+        {
+            Id = company.Id,
+            Name = company.Name,
+            CreatedAt = company.CreatedAt,
+            UpdatedAt = company.UpdatedAt
+        };
     }
 }

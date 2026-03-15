@@ -6,81 +6,89 @@ using WarehouseManagement.Models;
 namespace WarehouseManagement.Repository
 {
     public class BaseRepository<TEntity> : IBaseRepository<TEntity>
-       where TEntity : BaseEntity, new()
+        where TEntity : BaseEntity, new()
     {
         private readonly MainDbContext _context;
+        private readonly DbSet<TEntity> _dbSet;
+
         public BaseRepository(MainDbContext context)
         {
             _context = context;
+            _dbSet = _context.Set<TEntity>();
         }
-        public async Task Add(TEntity entity)
+
+        // IQueryable döndürüyoruz ki async metodları kullanabilelim
+        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> filter = null)
+        {
+            return filter == null
+                ? _dbSet.AsQueryable()
+                : _dbSet.Where(filter);
+        }
+
+        public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter)
+        {
+            return await _dbSet.FirstOrDefaultAsync(filter);
+        }
+
+        public async Task AddAsync(TEntity entity)
         {
             entity.Id = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
             entity.UpdatedAt = DateTime.UtcNow;
+            entity.IsDeleted = false;
 
-            _context.Set<TEntity>().Add(entity);
+            await _dbSet.AddAsync(entity);
         }
 
-        public async Task Delete(Guid Id)
+        public async Task UpdateAsync(TEntity entity)
         {
-            var entity = Get(x => x.Id == Id);
+            var existingEntity = await _dbSet.FindAsync(entity.Id);
+            if (existingEntity == null)
+                throw new Exception("Entity not found");
+
+            // Soft delete ve tarih alanlarını koru
+            entity.CreatedAt = existingEntity.CreatedAt;
+            entity.DeletedAt = existingEntity.DeletedAt;
+            entity.IsDeleted = existingEntity.IsDeleted;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var entity = await _dbSet.FindAsync(id);
             if (entity == null)
-            {
-                throw new Exception("Verilen Id'ye göre entity bulunmadı!");
-            }
+                throw new Exception("Entity not found");
 
             entity.IsDeleted = true;
             entity.DeletedAt = DateTime.UtcNow;
-            _context.Set<TEntity>().Update(entity);
-        }
-
-        public TEntity Get(Expression<Func<TEntity, bool>> filter)
-        {
-            return _context.Set<TEntity>().FirstOrDefault(filter);
-        }
-
-        public TEntity GetWithNavigation(Expression<Func<TEntity, bool>> filter = null, params string[] navigations)
-        {
-            IQueryable<TEntity> query = _context.Set<TEntity>();
-
-            foreach (var navigation in navigations)
-            {
-                query = query.Include(navigation);
-            }
-
-            return query.FirstOrDefault(filter);
-        }
-
-        public List<TEntity> GetAll(Expression<Func<TEntity, bool>> filter = null)
-        {
-            return filter == null
-                ? _context.Set<TEntity>().ToList()
-                : _context.Set<TEntity>().Where(filter).ToList();
-        }
-
-        public List<TEntity> GetAllWithNavigation(Expression<Func<TEntity, bool>> filter = null, params string[] navigations)
-        {
-            IQueryable<TEntity> query = _context.Set<TEntity>();
-
-            foreach (var navigation in navigations)
-            {
-                query = query.Include(navigation);
-            }
-
-            return filter == null ? query.ToList() : query.Where(filter).ToList();
-        }
-
-
-        public async Task Update(TEntity entity)
-        {
-            var updatedEntity = _context.Set<TEntity>().Find(entity.Id);
             entity.UpdatedAt = DateTime.UtcNow;
-            entity.CreatedAt = updatedEntity.CreatedAt;
-            entity.IsDeleted = updatedEntity.IsDeleted;
-            entity.DeletedAt = updatedEntity.DeletedAt;
 
-            _context.Entry(updatedEntity).CurrentValues.SetValues(entity);
+            _dbSet.Update(entity);
+        }
+
+        // Navigation property dahil edilen versiyon
+        public IQueryable<TEntity> GetAllWithNavigation(Expression<Func<TEntity, bool>> filter = null, params string[] navigations)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            foreach (var nav in navigations)
+            {
+                query = query.Include(nav);
+            }
+
+            return filter == null ? query : query.Where(filter);
+        }
+
+        public async Task<TEntity> GetWithNavigationAsync(Expression<Func<TEntity, bool>> filter, params string[] navigations)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            foreach (var nav in navigations)
+            {
+                query = query.Include(nav);
+            }
+
+            return await query.FirstOrDefaultAsync(filter);
         }
     }
 }
