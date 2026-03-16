@@ -2,10 +2,10 @@
 
 ## Genel Bilgi
 Bu proje, **Akıllı Depo Yönetimi** sistemi için geliştirilmiş bir full-stack uygulamadır.  
-Backend **.NET 9.0 (ASP.NET Core Web API)** ile geliştirilmiş, frontend **React 18 + TypeScript + Material-UI (MUI)** kullanılarak tek sayfa (SPA) olarak tasarlanmıştır.  
+Backend **.NET 9.0 (ASP.NET Core Web API)** ile geliştirilmiş, frontend **React 18 + TypeScript + Material-UI (MUI)** kullanılarak tasarlanmıştır.  
 Veritabanı olarak **MS SQL Server** ve ORM olarak **Entity Framework Core** kullanılmıştır.
 
-Sistem, şirket bazlı (multi-tenant) veri yönetimi ve server-side pagination ile verimli depo yönetimi sağlamaktadır.
+Sistem, şirket bazlı veri yönetimi ve server-side pagination ile verimli depo yönetimi sağlamaktadır.
 
 ---
 
@@ -25,16 +25,16 @@ Sistem, şirket bazlı (multi-tenant) veri yönetimi ve server-side pagination i
 ### Companies
 | Method | Endpoint | Açıklama |
 |--------|---------|----------|
-| GET | `/api/Companies/get-all` | Server-side pagination ile listeleme |
+| GET | `/api/Companies/get-all` | Şirketleri listele |
 | GET | `/api/Companies/get-by-id/{id}` | ID bazlı şirket getir |
 | POST | `/api/Companies/create` | Yeni şirket oluştur |
 | POST | `/api/Companies/update` | Şirket güncelle |
-| POST | `/api/Companies/delete` | Şirket sil (soft delete) |
+| POST | `/api/Companies/delete` | Şirket sil  |
 
 ### Products
 | Method | Endpoint | Açıklama |
 |--------|---------|----------|
-| GET | `/api/Products/get-all` | Ürünleri listele (server-side pagination) |
+| GET | `/api/Products/get-all` | Ürünleri listele  |
 | GET | `/api/Products/get-by-id/{id}` | ID bazlı ürün getir |
 | POST | `/api/Products/create` | Ürün oluştur |
 | POST | `/api/Products/update` | Ürün güncelle |
@@ -43,7 +43,7 @@ Sistem, şirket bazlı (multi-tenant) veri yönetimi ve server-side pagination i
 ### Warehouses
 | Method | Endpoint | Açıklama |
 |--------|---------|----------|
-| GET | `/api/Warehouse/get-all` | Depoları listele (pagination) |
+| GET | `/api/Warehouse/get-all` | Depoları listele  |
 | GET | `/api/Warehouse/get-by-id/{id}` | ID bazlı depo getir |
 | POST | `/api/Warehouse/create` | Depo oluştur |
 | POST | `/api/Warehouse/update` | Depo güncelle |
@@ -60,10 +60,9 @@ Sistem, şirket bazlı (multi-tenant) veri yönetimi ve server-side pagination i
 - Tek sayfa (SPA) uygulaması **React + TypeScript + MUI** ile geliştirilmiştir.  
 - Özellikler:
   - **Sidebar**: Dashboard, Companies, Warehouses, Products, Stock Movements
-  - **Sayfalanmış tablolar**: Server-side pagination, arama ve filtreleme
+  - **Sayfalanmış tablolar**: Server-side pagination
   - **Ekleme / Düzenleme modalı**: MUI Dialog ile
   - **Silme onay modalı**: Soft delete işlemleri için
-  - **Özet bilgi kartları**: Dashboard ana sayfasında
 
 ---
 
