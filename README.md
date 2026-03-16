@@ -49,7 +49,7 @@ Sistem, şirket bazlı veri yönetimi ve server-side pagination ile verimli depo
 | POST | `/api/Warehouse/update` | Depo güncelle |
 | POST | `/api/Warehouse/delete` | Depo sil |
 
-### Inventories (Stock Movements)
+### Inventories 
 | Method | Endpoint | Açıklama |
 |--------|---------|----------|
 | POST | `/api/Inventories/move-stock` | Stok hareketi (giriş/çıkış) |
