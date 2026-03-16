@@ -11,7 +11,6 @@ import {
   DeleteTwoTone,
   AddCircleTwoTone,
   SwapHorizontalCircleTwoTone as MoveIcon,
-  InventoryTwoTone,
   ShoppingBagTwoTone
 } from "@mui/icons-material";
 import { ProductsService } from "../services/ProductsService";
@@ -140,7 +139,7 @@ export default function ProductsPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={3} sx={{ mb: 4 }}>
         <Box>
           <Typography variant="h3" sx={{ fontWeight: 900, color: '#1a237e', display: 'flex', alignItems: 'center', gap: 2 }}>
-            <InventoryTwoTone sx={{ fontSize: 45 }} /> Envanter Yönetimi
+            Envanter Yönetimi
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">Ürün portföyünüzü ve depo stok hareketlerinizi kontrol edin.</Typography>
         </Box>

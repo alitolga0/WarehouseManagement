@@ -111,7 +111,7 @@ export default function WarehousesPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={3} sx={{ mb: 4 }}>
         <Box>
           <Typography variant="h3" sx={{ fontWeight: 900, color: '#1a237e', display: 'flex', alignItems: 'center', gap: 2 }}>
-            <WarehouseTwoTone sx={{ fontSize: 40 }} /> Depo Yönetimi
+            Depo Yönetimi
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             Lojistik merkezlerinizi ve depolama alanlarınızı buradan yönetin.
